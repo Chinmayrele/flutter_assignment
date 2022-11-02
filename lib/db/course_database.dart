@@ -29,12 +29,12 @@ class CourseDatabase {
     final intType = "INTEGER NOT NULL";
 
     await db.execute('''
-      CREATE TABLE $tableNotes (
-        ${CourseFields.id} $idType
-        ${CourseFields.name} $textType
-        ${CourseFields.description} $textType
-        ${CourseFields.language} $textType
-        ${CourseFields.watchersCount} $intType
+      CREATE TABLE IF NOT EXISTS $tableNotes (
+        ${CourseFields.id} $idType,
+        ${CourseFields.name} $textType,
+        ${CourseFields.description} $textType,
+        ${CourseFields.language} $textType,
+        ${CourseFields.watchersCount} $intType,
         ${CourseFields.stargazerCount} $intType
       )
     ''');
@@ -42,8 +42,11 @@ class CourseDatabase {
 
   Future<CourseData> create(CourseData courseData) async {
     final db = await instance.database;
+    print("!!!!!!!!!!!!!!");
 
-    final id = await db.insert(tableNotes, courseData.toJson());
+    final id = await db.insert(tableNotes, courseData.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.ignore);
+    print("@");
     return courseData.copy(id: id);
   }
 
@@ -88,6 +91,11 @@ class CourseDatabase {
       where: '${CourseFields.id} = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<void> dropTabe() async {
+    final db = await instance.database;
+    await db.execute("DROP TABLE IF EXISTS $tableNotes");
   }
 
   Future<void> close() async {
